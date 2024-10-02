@@ -5,17 +5,15 @@ from typing import Optional, Any
 from fastapi import FastAPI, Depends, APIRouter
 from asgi_correlation_id import CorrelationIdMiddleware
 from fastapi.middleware.cors import CORSMiddleware
-
-
-from fastapi import HTTPException, Body, status, Request
 from fastapi.responses import JSONResponse
+from fastapi import HTTPException, Body, status, Request
 from fastapi.exception_handlers import http_exception_handler
 from asgi_correlation_id import correlation_id
 
-import sys
-from pathlib import Path
-base_dir = Path(__file__).resolve().parent.parent
-sys.path.append(str(base_dir))
+# import sys
+# from pathlib import Path
+# base_dir = Path(__file__).resolve().parent.parent
+# sys.path.append(str(base_dir))
 
 
 from events_api.routers import event_endpoint
