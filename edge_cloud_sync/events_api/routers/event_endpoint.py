@@ -11,7 +11,7 @@ from fastapi import File, UploadFile
 from datetime import datetime
 from pydantic import BaseModel
 from fastapi.routing import APIRoute
-from fastapi import FastAPI, Depends, APIRouter, Request, Header, Response
+from fastapi import FastAPI, Depends, Form, APIRouter, Request, Header, Response
 from typing import Callable, Union, Any, Dict, AnyStr, Optional, List
 from typing_extensions import Annotated
 from tempfile import NamedTemporaryFile
@@ -42,8 +42,11 @@ class ApiResponse(BaseModel):
 
 
 class ApiRequest(BaseModel):
+    event_id:str
+    source_id:str
     blob_name:str
     container_name:Optional[str] = "."
+    metadata:Optional[str] = Form(None)
 
 
 router = APIRouter(

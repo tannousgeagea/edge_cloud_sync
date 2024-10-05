@@ -4,6 +4,7 @@ import uuid
 import django
 django.setup()
 
+import json
 import time
 import logging
 import numpy as np
@@ -11,6 +12,10 @@ from celery import Celery
 from celery import shared_task
 from datetime import datetime, timedelta
 from common_utils.cloud import azure
+from common_utils.models.common import (
+    get_event,
+    get_media
+)
 
 @shared_task(bind=True,autoretry_for=(Exception,), retry_backoff=True, retry_kwargs={"max_retries": 5}, ignore_result=True,
              name='media:sync_data')
@@ -18,6 +23,14 @@ def sync_data(self, data, media_file, **kwargs):
     
     results:dict = {}
     try:
+        event_model = get_event(
+            event_id=data.event_id,
+            source_id=data.source_id,
+            data=data.metadata,
+        )
+        
+        media = get_media(event=event_model, file_path=media_file)
+        
         url = azure.core.push(
             AzAccountUrl=os.getenv('AzAccountUrl'),
             AzAccountKey=os.getenv('AzAccountKey'),
@@ -25,6 +38,10 @@ def sync_data(self, data, media_file, **kwargs):
             blob_name=data.blob_name,
             container_name=data.container_name,
         )
+
+        if url:
+            media.uploaded = True
+            media.save()
 
         results.update(
             {
@@ -34,6 +51,9 @@ def sync_data(self, data, media_file, **kwargs):
             }
         )
         
+        
+        event_model.status = "completed"
+        event_model.save()
         
         return results
     
