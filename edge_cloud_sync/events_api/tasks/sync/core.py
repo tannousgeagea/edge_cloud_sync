@@ -21,6 +21,9 @@ from common_utils.models.common import (
              name='media:sync_data')
 def sync_data(self, data, media_file, **kwargs):
     
+    
+    media=None
+    event_model=None
     results:dict = {}
     try:
         
@@ -35,7 +38,6 @@ def sync_data(self, data, media_file, **kwargs):
         )
         
         media = get_media(event=event_model, file_path=media_file)
-        
         url = azure.core.push(
             AzAccountUrl=os.getenv('AzAccountUrl'),
             AzAccountKey=os.getenv('AzAccountKey'),
@@ -50,6 +52,8 @@ def sync_data(self, data, media_file, **kwargs):
         else:
             media.error_message = f"The file '{data.blob_name}' already exists in container '{data.container_name}'."
         
+        media.save()
+
         results.update(
             {
                 "action": "done",
@@ -62,9 +66,16 @@ def sync_data(self, data, media_file, **kwargs):
         event_model.retry_count = self.request.retries
         event_model.status = "completed"
         event_model.save()
-        media.save()
-        
+                
         return results
     
     except Exception as err:
+        if event_model:
+            event_model.error_message = f"{err}"
+            event_model.save()
+        
+        if media:
+            media.error_message = f"{err}"
+            media.save()
+        
         raise ValueError(f"Error syncing data! received data {data}: {err}")

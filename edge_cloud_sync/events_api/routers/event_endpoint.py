@@ -11,11 +11,11 @@ from fastapi import File, UploadFile
 from datetime import datetime
 from pydantic import BaseModel
 from fastapi.routing import APIRoute
+from fastapi import status
 from fastapi import FastAPI, Depends, Form, APIRouter, Request, Header, Response
 from typing import Callable, Union, Any, Dict, AnyStr, Optional, List
 from typing_extensions import Annotated
 from tempfile import NamedTemporaryFile
-
 from events_api.tasks.sync import core
 
 class TimedRoute(APIRoute):
@@ -42,10 +42,10 @@ class ApiResponse(BaseModel):
 
 
 class ApiRequest(BaseModel):
-    event_id:str
-    source_id:str
-    blob_name:str
-    container_name:Optional[str] = "."
+    event_id:str = Form(...)
+    source_id:str = Form(...)
+    blob_name:str = Form(...)
+    container_name:Optional[str] = Form('.')
     metadata:Optional[str] = Form(None)
 
 
@@ -67,14 +67,36 @@ async def sync_data(
     x_request_id: Annotated[Optional[str], Header()] = None,
 ) -> dict:
 
-    with NamedTemporaryFile(delete=False, suffix=os.path.splitext(media_file.filename)[1]) as temp_file:
-        temp_file.write(await media_file.read())
-        temp_file_path = temp_file.name
+    results = {}
+    try:
+        if not media_file:
+            results['error'] = {
+                'status_code': 'bad-request',
+                'status_description': f'No files included in the request',
+                'details': f'No files included in the request',
+            }
+            
+            response.status_code = status.HTTP_400_BAD_REQUEST
+            return results
+        
+        
+        with NamedTemporaryFile(delete=False, suffix=os.path.splitext(media_file.filename)[1]) as temp_file:
+            temp_file.write(await media_file.read())
+            temp_file_path = temp_file.name
+            
+        task = core.sync_data.apply_async(args=(data, temp_file_path), task_id=x_request_id)
+        results = {"status": "received", "task_id": task.id, "data": {}}
 
-    task = core.sync_data.apply_async(args=(data, temp_file_path), task_id=x_request_id)
-    result = {"status": "received", "task_id": task.id, "data": {}}
-
-    return result
+    except Exception as err:
+        results['error'] = {
+            'status_code': 'server-error',
+            "status_description": f"Internal Server Error",
+            "detail": str(err),
+        }
+        
+        response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR 
+    
+    return results
 
 
 
