@@ -23,10 +23,15 @@ def sync_data(self, data, media_file, **kwargs):
     
     results:dict = {}
     try:
+        
+        metadata = None
+        if data.metadata:
+            metadata = json.loads(data.metadata)
+            
         event_model = get_event(
             event_id=data.event_id,
             source_id=data.source_id,
-            data=data.metadata,
+            data=metadata,
         )
         
         media = get_media(event=event_model, file_path=media_file)
@@ -39,10 +44,12 @@ def sync_data(self, data, media_file, **kwargs):
             container_name=data.container_name,
         )
 
+        
         if url:
             media.uploaded = True
-            media.save()
-
+        else:
+            media.error_message = f"The file '{data.blob_name}' already exists in container '{data.container_name}'."
+        
         results.update(
             {
                 "action": "done",
@@ -52,8 +59,10 @@ def sync_data(self, data, media_file, **kwargs):
         )
         
         
+        event_model.retry_count = self.request.retries
         event_model.status = "completed"
         event_model.save()
+        media.save()
         
         return results
     

@@ -39,7 +39,8 @@ def get_media(
 ):
     try:
         media = MediaFile(
-            event=event
+            event=event,
+            file_path=file_path,
         )
         
         media.save()        

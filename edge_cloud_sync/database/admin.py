@@ -25,3 +25,9 @@ class EventAdmin(admin.ModelAdmin):
 
     # Add the media file inline to display linked media files
     inlines = [MediaFileInline]
+    
+    
+@admin.register(MediaFile)
+class MediaFileAdmin(admin.ModelAdmin):
+    list_display = ('event', 'file_path', 'uploaded')
+    list_filter = ('uploaded', )
