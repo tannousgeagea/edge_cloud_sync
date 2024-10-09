@@ -16,7 +16,7 @@ from asgi_correlation_id import correlation_id
 # sys.path.append(str(base_dir))
 
 
-from events_api.routers import event_endpoint
+from events_api.routers import media, data
 from events_api.config import celery_utils
 
 def create_app() -> FastAPI:
@@ -55,7 +55,8 @@ def create_app() -> FastAPI:
 
 
     app.celery_app = celery_utils.create_celery()
-    app.include_router(event_endpoint.router)
+    app.include_router(media.endpoint.router)
+    app.include_router(data.endpoint.router)
     return app
 
 app = create_app()

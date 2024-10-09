@@ -45,6 +45,7 @@ class Event(models.Model):
 
 class MediaFile(models.Model):
     event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='media_files')  # Link to the related event
+    media_id = models.CharField(max_length=255, unique=True, null=True, blank=True)
     file_path = models.CharField(max_length=512, help_text="File path or URL to the media file")
     retry_count = models.PositiveIntegerField(default=0)
     uploaded = models.BooleanField(default=False)

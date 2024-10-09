@@ -14,10 +14,7 @@ def get_event(
 ):
     try:
         if Event.objects.filter(event_id=event_id).exists():
-            raise HTTPException(
-               status_code=status.HTTP_409_CONFLICT,
-                detail=f"Event with event_id '{event_id}' already exists."
-            )
+            return Event.objects.get(event_id=event_id)
             
         event = Event(
             event_id=event_id,
@@ -36,11 +33,13 @@ def get_event(
 def get_media(
     event:Event,
     file_path:str,
+    media_id:str,
 ):
     try:
         media = MediaFile(
             event=event,
             file_path=file_path,
+            media_id=media_id,
         )
         
         media.save()        

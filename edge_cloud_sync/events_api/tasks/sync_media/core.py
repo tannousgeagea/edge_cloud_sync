@@ -20,8 +20,6 @@ from common_utils.models.common import (
 @shared_task(bind=True,autoretry_for=(Exception,), retry_backoff=True, retry_kwargs={"max_retries": 5}, ignore_result=True,
              name='media:sync_data')
 def sync_data(self, data, media_file, **kwargs):
-    
-    
     media=None
     event_model=None
     results:dict = {}
@@ -37,7 +35,7 @@ def sync_data(self, data, media_file, **kwargs):
             data=metadata,
         )
         
-        media = get_media(event=event_model, file_path=media_file)
+        media = get_media(event=event_model, file_path=media_file, media_id=str(uuid.uuid4()))
         url = azure.core.push(
             AzAccountUrl=os.getenv('AzAccountUrl'),
             AzAccountKey=os.getenv('AzAccountKey'),
