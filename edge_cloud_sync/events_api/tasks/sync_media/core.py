@@ -25,6 +25,7 @@ def sync_data(self, data, media_file, **kwargs):
     results:dict = {}
     try:
         
+        self.request.id = self.task_id
         metadata = None
         if data.metadata:
             metadata = json.loads(data.metadata)
