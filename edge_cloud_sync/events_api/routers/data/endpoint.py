@@ -76,3 +76,11 @@ async def sync_data(
         response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR 
     
     return results
+
+@router.api_route(
+    "/event/data/{task_id}", methods=["GET"], tags=["Data"], response_model=ApiResponse
+)
+async def get_event_status(task_id: str, response: Response, x_request_id:Annotated[Optional[str], Header()] = None):
+    result = {"status": "received", "task_id": str(uuid.uuid4()), "data": {}}
+
+    return result
