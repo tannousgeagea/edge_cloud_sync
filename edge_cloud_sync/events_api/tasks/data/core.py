@@ -31,13 +31,24 @@ def execute(self, data, payload, **kwargs):
             data=data.data,
         )
     
-        print(payload.model_dump())
         response = requests.post(
             url=f'http://10.10.0.7:19092/api/v1/{data.target}',
-            data=json.dumps(payload.model_dump()),
+            data=payload.json(),
         )
         
-        print(response)
+        if response.status_code == 200:
+            results.update(
+                {
+                    "results": results.json(),
+                }
+            )
+        else:
+            event_model.error_message = f"{err}"
+            event_model.save()
+            raise requests.exceptions.HTTPError(
+                f"Error sending request to {data.target}: {response.status_code}"
+            )
+        
         results.update(
             {
                 "action": "done",
