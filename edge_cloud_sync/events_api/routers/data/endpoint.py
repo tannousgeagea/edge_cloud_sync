@@ -14,7 +14,9 @@ from fastapi import status
 from fastapi import FastAPI, Depends, Form, APIRouter, Request, Header, Response
 from typing import Callable, Union, Any, Dict, AnyStr, Optional, List
 from typing_extensions import Annotated
-from events_api.tasks.sync_data import core
+from events_api.tasks.data import core
+from common_utils.requests.core import REQUESTS
+
 
 class TimedRoute(APIRoute):
     def get_route_handler(self) -> Callable:
@@ -40,9 +42,10 @@ class ApiResponse(BaseModel):
 
 
 class ApiRequest(BaseModel):
-    event_id:str = Form(...)
-    source_id:str = Form(...)
-    data:Optional[Dict] = Form(None)
+    event_id:str
+    source_id:str
+    target:str
+    data:Dict
 
 
 router = APIRouter(
@@ -53,18 +56,28 @@ router = APIRouter(
 )
 
 @router.api_route(
-    "/event/data", methods=["POST"], tags=["Data"]
+    "/data", methods=["POST"], tags=["Data"]
 )
 async def sync_data(
     response:Response,
-    data:ApiRequest = Depends(),
+    data:ApiRequest = Body(...),
     x_request_id: Annotated[Optional[str], Header()] = None,
 ) -> dict:
 
     results = {}
     try:
-        task = core.sync_data.apply_async(args=(data, ), task_id=x_request_id)
-        results = {"status": "received", "task_id": task.id, "data": data.dict()}
+        payload = REQUESTS.get(data.target)
+        if not payload:
+            pass
+        
+        payload = payload(**data.data)
+        
+        task = core.execute.apply_async(args=(data, payload), task_id=x_request_id)
+        results = {
+            "status": "received", 
+            "task_id": task.id, 
+            # "data": data.model_dump()
+            }
 
     except Exception as err:
         results['error'] = {

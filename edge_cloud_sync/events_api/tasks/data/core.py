@@ -7,18 +7,20 @@ django.setup()
 import json
 import time
 import logging
+import requests
 import numpy as np
 from celery import Celery
 from celery import shared_task
 from datetime import datetime, timedelta
-from common_utils.cloud import azure
 from common_utils.models.common import (
     get_event,
 )
 
+from common_utils.requests.core import REQUESTS
+
 @shared_task(bind=True,autoretry_for=(Exception,), retry_backoff=True, retry_kwargs={"max_retries": 5}, ignore_result=True,
              name='data:sync_data')
-def sync_data(self, data, **kwargs):
+def execute(self, data, payload, **kwargs):
     event_model=None
     results:dict = {}
     try:
@@ -28,14 +30,20 @@ def sync_data(self, data, **kwargs):
             source_id=data.source_id,
             data=data.data,
         )
-
+    
+        print(payload.model_dump())
+        response = requests.post(
+            url=f'http://10.10.0.7:19092/api/v1/{data.target}',
+            data=json.dumps(payload.model_dump()),
+        )
+        
+        print(response)
         results.update(
             {
                 "action": "done",
                 "time": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             }
         )
-        
         
         event_model.retry_count = self.request.retries
         event_model.status = "completed"
