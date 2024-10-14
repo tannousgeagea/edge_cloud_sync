@@ -68,7 +68,9 @@ async def sync_data(
     try:
         payload = REQUESTS.get(data.target)
         if not payload:
-            pass
+            raise HTTPException(
+                status_code=400, detail=f"Invalid targed {data.target}"
+            )
         
         payload = payload(**data.data)
         

@@ -6,6 +6,7 @@ django.setup()
 
 import json
 import time
+import requests
 import logging
 import numpy as np
 from celery import Celery
@@ -19,21 +20,18 @@ from common_utils.models.common import (
 
 @shared_task(bind=True,autoretry_for=(Exception,), retry_backoff=True, retry_kwargs={"max_retries": 5}, ignore_result=True,
              name='media:sync_data')
-def sync_data(self, data, media_file, **kwargs):
+def sync_data(self, data, payload, media_file, **kwargs):
     media=None
     event_model=None
     results:dict = {}
     try:
         
-        self.request.id = self.task_id
-        metadata = None
-        if data.metadata:
-            metadata = json.loads(data.metadata)
+        # self.request.id = self.task_id
             
         event_model = get_event(
             event_id=data.event_id,
             source_id=data.source_id,
-            data=metadata,
+            data=payload.model_dump(),
         )
         
         media = get_media(event=event_model, file_path=media_file, media_id=str(uuid.uuid4()))
@@ -44,10 +42,29 @@ def sync_data(self, data, media_file, **kwargs):
             blob_name=data.blob_name,
             container_name=data.container_name,
         )
-
         
         if url:
             media.uploaded = True
+            payload.media_url = url
+            payload.media_id = media.media_id
+            response = requests.post(
+                url=f'http://10.10.0.7:19092/api/v1/{data.target}',
+                data=payload.json(),
+            )
+
+            if response.status_code == 200:
+                results.update(
+                    {
+                        "results": results.json(),
+                    }
+                )
+            else:
+                event_model.error_message = f"{err}"
+                event_model.save()
+                raise requests.exceptions.HTTPError(
+                    f"Error sending request to {data.target}: {response.status_code}"
+            )
+            
         else:
             media.error_message = f"The file '{data.blob_name}' already exists in container '{data.container_name}'."
         

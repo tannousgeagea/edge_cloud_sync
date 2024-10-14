@@ -16,6 +16,7 @@ class Event(models.Model):
 
     event_id = models.CharField(max_length=255, unique=True)
     source_id = models.CharField(max_length=255, null=True, blank=True, help_text="Source system or service that generated this event")
+    target = models.CharField(max_length=100, null=True, blank=True)
     data = models.JSONField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

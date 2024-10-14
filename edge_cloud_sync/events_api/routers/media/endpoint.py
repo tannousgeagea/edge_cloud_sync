@@ -16,7 +16,9 @@ from fastapi import FastAPI, Depends, Form, APIRouter, Request, Header, Response
 from typing import Callable, Union, Any, Dict, AnyStr, Optional, List
 from typing_extensions import Annotated
 from tempfile import NamedTemporaryFile
-from events_api.tasks.sync_media import core
+from events_api.tasks.media import core
+from common_utils.requests.core import REQUESTS
+
 
 class TimedRoute(APIRoute):
     def get_route_handler(self) -> Callable:
@@ -46,7 +48,8 @@ class ApiRequest(BaseModel):
     source_id:str = Form(...)
     blob_name:str = Form(...)
     container_name:Optional[str] = Form('.')
-    metadata:Optional[str] = Form(None)
+    target:str = Form(...)
+    data:str = Form(...)
 
 
 router = APIRouter(
@@ -79,12 +82,20 @@ async def sync_data(
             response.status_code = status.HTTP_400_BAD_REQUEST
             return results
         
+        payload = REQUESTS.get(data.target)
+        if not payload:
+            raise HTTPException(
+                status_code=400, detail=f"Invalid targed {data.target}"
+            )
         
+        
+        _data = json.loads(data.data)
+        payload = payload(**_data)
         with NamedTemporaryFile(delete=False, suffix=os.path.splitext(media_file.filename)[1]) as temp_file:
             temp_file.write(await media_file.read())
             temp_file_path = temp_file.name
             
-        task = core.sync_data.apply_async(args=(data, temp_file_path), task_id=x_request_id)
+        task = core.sync_data.apply_async(args=(data, payload, temp_file_path), task_id=x_request_id)
         results = {"status": "received", "task_id": task.id, "data": {}}
 
     except Exception as err:
