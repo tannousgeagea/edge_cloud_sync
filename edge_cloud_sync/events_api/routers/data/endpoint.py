@@ -73,7 +73,6 @@ async def sync_data(
             )
         
         payload = payload(**data.data)
-        
         task = core.execute.apply_async(args=(data, payload), task_id=x_request_id)
         results = {
             "status": "received", 

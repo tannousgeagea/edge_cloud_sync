@@ -32,21 +32,21 @@ def execute(self, data, payload, **kwargs):
         )
     
         response = requests.post(
-            url=f'http://10.10.0.7:19092/api/v1/{data.target}',
+            url=f'http://datahub.want:19092/api/v1/{data.target}',
             data=payload.json(),
         )
         
         if response.status_code == 200:
             results.update(
                 {
-                    "results": results.json(),
+                    "results": response.json(),
                 }
             )
         else:
-            event_model.error_message = f"{err}"
+            event_model.error_message = f"{response.text}"
             event_model.save()
             raise requests.exceptions.HTTPError(
-                f"Error sending request to {data.target}: {response.status_code}"
+                f"Error sending request to {data.target}: {response.status_code}:{response.text}"
             )
         
         results.update(

@@ -48,14 +48,14 @@ def sync_data(self, data, payload, media_file, **kwargs):
             payload.media_url = url
             payload.media_id = media.media_id
             response = requests.post(
-                url=f'http://10.10.0.7:19092/api/v1/{data.target}',
+                url=f'http://datahub.want:19092/api/v1/{data.target}',
                 data=payload.json(),
             )
 
             if response.status_code == 200:
                 results.update(
                     {
-                        "results": results.json(),
+                        "results": response.json(),
                     }
                 )
             else:

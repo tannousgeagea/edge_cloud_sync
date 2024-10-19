@@ -1,6 +1,7 @@
 
 from datetime import datetime
 from pydantic import BaseModel
+from typing import Optional
 
 class DeliveryRequest(BaseModel):
     tenant_domain: str
@@ -23,12 +24,12 @@ class DeliveryFlagRequest(BaseModel):
     
 class AlarmRequest(BaseModel):
     tenant_domain: str
-    location: str
-    entity_uid:str
+    location:str
+    event_uid:str
     flag_type:str
     severity_level:int
     timestamp:datetime
-    delivery_id:str=None
+    delivery_id:Optional[str]=None
 
 class AlarmMediaRequest(BaseModel):
     event_uid:str
