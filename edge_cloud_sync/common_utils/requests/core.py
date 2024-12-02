@@ -16,6 +16,7 @@ class DeliveryMediaRequest(BaseModel):
     media_name:str
     media_type:str
     media_url:str
+    sensor_box_location:Optional[str] = None
 
 class DeliveryFlagRequest(BaseModel):
     delivery_id:str
