@@ -1,7 +1,7 @@
 
 from datetime import datetime
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, Dict
 
 class DeliveryRequest(BaseModel):
     tenant_domain: str
@@ -31,6 +31,7 @@ class AlarmRequest(BaseModel):
     severity_level:int
     timestamp:datetime
     delivery_id:Optional[str]=None
+    meta_info:Optional[Dict]=None
 
 class AlarmMediaRequest(BaseModel):
     event_uid:str
