@@ -22,6 +22,7 @@ class DeliveryFlagRequest(BaseModel):
     delivery_id:str
     flag_type:str
     severity_level:str
+    event_uid:Optional[str] = None 
     
 class AlarmRequest(BaseModel):
     tenant_domain: str
