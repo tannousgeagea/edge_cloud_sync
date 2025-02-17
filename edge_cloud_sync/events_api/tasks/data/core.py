@@ -32,7 +32,7 @@ def execute(self, data, payload, **kwargs):
         )
     
         response = requests.post(
-            url=f'http://datahub.want:19092/api/v1/{data.target}',
+            url=f'http://{os.getenv("CLOUD_HOST")}:{os.getenv("CLOUD_PORT")}/api/v1/{data.target}',
             data=payload.json(),
         )
         

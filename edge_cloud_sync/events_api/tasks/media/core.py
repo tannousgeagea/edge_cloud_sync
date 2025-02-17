@@ -59,7 +59,7 @@ def sync_data(self, data, payload, media_file, **kwargs):
                     }
                 )
             else:
-                event_model.error_message = f"{err}"
+                event_model.error_message = f"{response.text}"
                 event_model.save()
                 raise requests.exceptions.HTTPError(
                     f"Error sending request to {data.target}: {response.status_code}"

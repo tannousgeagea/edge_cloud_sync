@@ -16,6 +16,7 @@ services:
         groupid: ${groupid}
     networks:
       - internal
+      - external
     ports:
       - ${INET_HTTP_SERVER_PORT}:${INET_HTTP_SERVER_PORT}
       - ${EVENT_API_PORT}:${EVENT_API_PORT}
@@ -60,7 +61,8 @@ services:
 
 networks:
   internal:
-    driver: bridge 
+    driver: bridge
+  external:
 
 volumes:
   postgres_data:

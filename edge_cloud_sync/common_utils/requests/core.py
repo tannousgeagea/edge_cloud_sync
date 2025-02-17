@@ -41,6 +41,18 @@ class AlarmMediaRequest(BaseModel):
     media_type:str
     media_url:str
 
+class VideoArchiveRequest(BaseModel):
+    tenant_domain: str
+    location: str
+    sensor_box_location: str
+    camera_id: str
+    video_id: str
+    media_id: str
+    media_name: str
+    media_url: str
+    media_type: str  # e.g., "video"
+    start_time: Optional[str] = None
+    end_time: Optional[str] = None
 
 REQUESTS = {
     "delivery": DeliveryRequest,
@@ -48,4 +60,5 @@ REQUESTS = {
     "delivery/media": DeliveryMediaRequest,
     "alarm": AlarmRequest,
     "alarm/media": AlarmMediaRequest,
+    "video_archive": VideoArchiveRequest,
 }
