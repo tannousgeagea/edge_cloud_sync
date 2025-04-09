@@ -12,6 +12,7 @@ import numpy as np
 from celery import Celery
 from celery import shared_task
 from datetime import datetime, timedelta
+from django.db import close_old_connections
 from common_utils.models.common import (
     get_event,
 )
@@ -21,6 +22,7 @@ from common_utils.requests.core import REQUESTS
 @shared_task(bind=True,autoretry_for=(Exception,), retry_backoff=True, retry_kwargs={"max_retries": 5}, ignore_result=True,
              name='data:sync_data')
 def execute(self, data, payload, **kwargs):
+    close_old_connections()
     event_model=None
     results:dict = {}
     try:
